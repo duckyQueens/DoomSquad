@@ -178,7 +178,7 @@ impl Player {
         if window.is_key_pressed(Key::F, KeyRepeat::No) {
             self.interacting = true;
         }
-
+        //TODO: hier müssen die Keybindings variabel und nicht hardcoded sein
         //swap between aim_mode and not, during aim mode sense is lowered
         if window.is_key_pressed(Key::E, KeyRepeat::No) {
             match self.aim_mode {

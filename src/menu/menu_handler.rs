@@ -30,6 +30,7 @@ pub enum AppState {
     Playing,
     GameOver,
     GamePaused,
+    KeyBindings,
     Quit,
 }
 
@@ -97,16 +98,16 @@ impl Menu {
         // Define button layouts
         let btn_start = ButtonDef {
             x: 230,
-            y: 160,
+            y: 140,
             w: 340,
-            h: 50,
+            h: 40,
             text: "[1] NEW GAME".to_string(),
         };
         let btn_load = ButtonDef {
             x: 230,
-            y: 230,
+            y: 200,
             w: 340,
-            h: 50,
+            h: 40,
             text: "[2] LOAD MAP".to_string(),
         };
 
@@ -117,17 +118,26 @@ impl Menu {
         };
         let btn_audio = ButtonDef {
             x: 230,
-            y: 300,
+            y: 260,
             w: 340,
-            h: 50,
+            h: 40,
             text: audio_text.to_string(),
+        };
+
+
+        let btn_key = ButtonDef {
+            x: 230,
+            y: 320,
+            w: 340,
+            h: 40,
+            text: "[4] KEY BINDINGS".to_string()
         };
 
         let btn_quit = ButtonDef {
             x: 230,
-            y: 370,
+            y: 380,
             w: 340,
-            h: 50,
+            h: 40,
             text: "[ESC] QUIT GAME".to_string(),
         };
 
@@ -153,6 +163,10 @@ impl Menu {
         if self.draw_flat_button(buffer, &btn_audio, mx, my) && clicked || click3 {
             audio.set_muted(!audio.is_muted);
             return AppState::StartScreen;
+        }
+
+        if self.draw_flat_button(buffer, &btn_key, mx, my) && clicked {
+            return AppState::KeyBindings;
         }
 
         if self.draw_flat_button(buffer, &btn_quit, mx, my) && clicked {
@@ -249,29 +263,38 @@ impl Menu {
             x: 230,
             y: 150,
             w: 340,
-            h: 50,
+            h: 40,
             text: "[1] RESUME GAME".to_string(),
         };
         let btn_save = ButtonDef {
             x: 230,
             y: 210,
             w: 340,
-            h: 50,
+            h: 40,
             text: "[2] SAVE & EXIT".to_string(),
         };
         let btn_audio = ButtonDef {
             x: 230,
             y: 270,
             w: 340,
-            h: 50,
+            h: 40,
             text: audio_text.to_string(),
         };
         let btn_menu = ButtonDef {
             x: 230,
             y: 330,
             w: 340,
-            h: 50,
+            h: 40,
             text: "[ESC] MAIN MENU".to_string(),
+        };
+
+        //here goes nothin
+        let btn_keybindings = ButtonDef {
+            x: 230,
+            y: 330,
+            w: 340,
+            h: 40,
+            text: "[4] Key Bindings".to_string(),
         };
 
         if self.draw_flat_button(buffer, &btn_resume, mx, my) && clicked || click1 {
@@ -292,8 +315,84 @@ impl Menu {
         if self.draw_flat_button(buffer, &btn_menu, mx, my) && clicked {
             return AppState::StartScreen;
         }
+        if self.draw_flat_button(buffer, &btn_keybindings, mx, my) && clicked {
+            return AppState::KeyBindings;
+        }
 
         AppState::GamePaused
+    }
+
+    pub fn update_and_draw_key_bindings(
+        &mut self,
+        window: &mut Window,
+        buffer: &mut [u32],
+        game: &mut Game,
+        audio: &mut Audio,
+    )-> AppState{
+            buffer.fill(COL_BG_MAIN);
+
+            let (mx, my, clicked) = self.get_mouse_state(window);
+
+            Self::draw_text_centered(
+                buffer,
+                SCREEN_WIDTH,
+                SCREEN_HEIGHT,
+                "KEY BINDINGS",
+                30,
+                3,
+                COL_TEXT_WHITE
+            );
+
+            let btn_forwards = Self::grid_btn(0,0, "FORWARDS");
+            let btn_backwards = Self::grid_btn(0,1,"BACKWARDS");
+            let btn_right = Self::grid_btn(0,2, "RIGHT");
+            let btn_left = Self::grid_btn(0,3, "LEFT");
+            let btn_jump = Self::grid_btn(0,4, "JUMP");
+            let btn_crouch_slide = Self::grid_btn(0,5, "CROUCH/SLIDE");
+            let btn_rocket_jump = Self::grid_btn(1,0, "ROCKET JUMP");
+            let btn_interact = Self::grid_btn(1,1, "INTERACT");
+            let btn_aim = Self::grid_btn(1,2, "AIM");
+            let btn_turn_left = Self::grid_btn(1,3, "TURN L");
+            let btn_turn_right = Self::grid_btn(1, 4, "TURN R");
+            let btn_toggle_fine_aiming = Self::grid_btn(1,5,"FINE AIM");
+            let btn_fire_bullet = Self::grid_btn(2,0, "BULLET");
+            let btn_fire_arrow = Self::grid_btn(2,1, "ARROW");
+            let btn_toggle_godmode = Self::grid_btn(2,2, "GODMODE");
+            let btn_lock = Self::grid_btn(2,3, "LOCK");
+            let btn_exit_to_main = Self::grid_btn(2,4, "EXIT");
+
+            self.draw_flat_button(buffer, &btn_backwards, mx, my);
+            self.draw_flat_button(buffer, &btn_forwards, mx, my);
+            self.draw_flat_button(buffer, &btn_right, mx, my);
+            self.draw_flat_button(buffer, &btn_left, mx, my);
+            self.draw_flat_button(buffer, &btn_backwards, mx, my);
+            self.draw_flat_button(buffer, &btn_jump, mx, my);
+            self.draw_flat_button(buffer, &btn_crouch_slide, mx, my);
+            self.draw_flat_button(buffer, &btn_rocket_jump, mx, my);
+            self.draw_flat_button(buffer, &btn_interact, mx, my);
+            self.draw_flat_button(buffer, &btn_aim, mx, my);
+            self.draw_flat_button(buffer, &btn_turn_left, mx, my);
+            self.draw_flat_button(buffer, &btn_turn_right, mx, my);
+            self.draw_flat_button(buffer, &btn_toggle_fine_aiming, mx, my);
+            self.draw_flat_button(buffer, &btn_fire_bullet, mx, my);
+            self.draw_flat_button(buffer, &btn_fire_arrow, mx, my);
+            self.draw_flat_button(buffer, &btn_toggle_godmode, mx, my);
+            self.draw_flat_button(buffer, &btn_lock, mx, my);
+            self.draw_flat_button(buffer, &btn_exit_to_main, mx, my);
+
+        AppState::KeyBindings
+    }
+    pub fn grid_btn(column: usize, row: usize, text: &str) -> ButtonDef{
+        let height= 45;
+        let width =  220;
+        let gap = 15;
+        ButtonDef{
+            x: 50 + column * (width + gap),
+            y : 80 + row * (height + gap),
+            w: width,
+            h : height,
+            text: text.to_string()
+        }
     }
 
     /// Fetches mouse coordinates and performs edge detection (debouncing) for left-clicks.

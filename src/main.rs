@@ -40,7 +40,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err(Box::new(e));
         }
     };
-
     window.set_target_fps(TARGET_FPS);
     let mut buffer: Vec<u32> = vec![0; SCREEN_WIDTH * SCREEN_HEIGHT];
 
@@ -126,6 +125,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 } else {
                     app_state = menu.update_and_draw_game_over(&mut window, &mut buffer, &mut game);
                 }
+            }
+
+            AppState::KeyBindings => {
+                (window).set_cursor_visibility(true);
+                let mut settings = Menu::new();
+                app_state = settings.update_and_draw_key_bindings(&mut window,
+                                                              &mut buffer,
+                                                              &mut game,
+                                                              &mut audio
+
+                );
             }
 
             AppState::Quit => {

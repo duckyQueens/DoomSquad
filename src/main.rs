@@ -129,8 +129,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             AppState::KeyBindings => {
                 (window).set_cursor_visibility(true);
-                let mut settings = Menu::new();
-                app_state = settings.update_and_draw_key_bindings(&mut window,
+
+                app_state = menu.update_and_draw_key_bindings(&mut window,
                                                               &mut buffer,
                                                               &mut game,
                                                               &mut audio

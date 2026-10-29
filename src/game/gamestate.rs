@@ -20,6 +20,7 @@ use crate::parser::entities_parser::parse_entities;
 use crate::parser::interactables_parser::*;
 use crate::parser::player_parser::parse_player_position;
 use minifb::Window;
+use crate::menu::menu_handler::Menu;
 
 const DESPAWN_TIME: i32 = 300;
 const MAP_GRID_CELL_SIZE: f64 = 64.0;
@@ -81,7 +82,7 @@ impl Game {
         }
     }
 
-    pub fn update(&mut self, window: &Window, renderer_data: &RendererData, audio: &mut Audio) {
+    pub fn update(&mut self, window: &Window, renderer_data: &RendererData, audio: &mut Audio, menu: &Menu) {
         //update all interactables and add possible spawn events
         let mut interactables = std::mem::take(&mut self.interactables);
         let mut interactables_spawns = Vec::new();
@@ -95,7 +96,7 @@ impl Game {
 
         let mut entity_spawns = Vec::new();
         //update player
-        let event = self.player.update(window, &self.map, renderer_data, audio);
+        let event = self.player.update(window, &self.map, renderer_data, audio, menu);
         //add possible spawn events
         entity_spawns.extend(event);
 

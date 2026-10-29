@@ -5,13 +5,18 @@
 //! processing mouse clicks, and taking care of saving and loading the player's progress.
 
 use std::cmp::PartialEq;
+use std::fmt::Debug;
 use font8x8::{BASIC_FONTS, UnicodeFonts};
 use minifb::{Key, KeyRepeat, MouseButton, MouseMode, Window};
+use key_bindings::ActionKey;
 use std::fs;
-
+use minifb::Key::{Space, D, W, C, R, F, Up, Down, Left, Right, E, RightCtrl, RightShift, G, L, Escape, S, A};
+use log::error;
 use crate::audio::audio_handler::Audio;
 use crate::game::gamestate::Game;
 use crate::game::player::LastInputDirection::No;
+use crate::menu::key_bindings;
+use crate::menu::key_bindings::{get_key_str, Keys};
 use crate::render::RendererData;
 
 const SCREEN_WIDTH: usize = 800;
@@ -52,7 +57,7 @@ pub enum KeyFunctions {
     FineAim,
     FireBullet,
     FireArrow,
-    Godmode,
+    GodMode,
     Lock,
     Exit,
 }
@@ -64,7 +69,7 @@ struct ButtonDef {
     w: usize,
     h: usize,
     text: String,
-    action: Option<KeyFunctions>
+    action: Option<ActionKey>
 }
 
 /// Holds the minimal state required for the IMGUI.
@@ -72,7 +77,8 @@ struct ButtonDef {
 /// we only need to manually track the mouse state for edge detection (clicks).
 pub struct Menu {
     was_mouse_down: bool,
-    selected_key: Option<KeyFunctions>,
+    selected_key: Option<usize>,
+    pub key_bindings: Vec<ActionKey>,
 }
 
 
@@ -80,8 +86,52 @@ impl Menu {
     pub fn new() -> Self {
         Self {
             was_mouse_down: false,
-            selected_key: None
+            selected_key: None,
+            key_bindings: Vec::from([
+                ActionKey::Forwards {key:Key::W},
+                ActionKey::Backwards{key:Key::D},
+                ActionKey::Right{key:Key::S},
+                ActionKey::Left{key:Key::A},
+                ActionKey::Jump{key:Key::Space},
+                ActionKey::CrouchSlide{key:Key::C},
+                ActionKey::RocketJump{key:Key::R},
+                ActionKey::Interact{key:Key::F},
+                ActionKey::CrosshairPosL{key:Key::Up},
+                ActionKey::CrosshairPosR{key:Key::Down},
+                ActionKey::TurnLeft{key:Key::Left},
+                ActionKey::TurnRight{key:Key::Right},
+                ActionKey::FineAim{key:Key::E},
+                ActionKey::FireBullet{key:Key::RightCtrl},
+                ActionKey::FireArrow{key:Key::RightShift},
+                ActionKey::GodMode{key:Key::G},
+                ActionKey::Lock{key:Key::L},
+                ActionKey::Exit{key:Key::Escape},
+            ]),
         }
+    }
+    pub fn get_key_binding(&self, ident: &str) -> Option<Key> {
+        let key = match ident {
+            "Forwards" => &self.key_bindings[0],
+            "Backwards" => &self.key_bindings[1],
+            "Right" => &self.key_bindings[2],
+            "Left" => &self.key_bindings[3],
+            "Jump" => &self.key_bindings[4],
+            "CrouchSlide" => &self.key_bindings[5],
+            "RocketJump" => &self.key_bindings[6],
+            "Interact" => &self.key_bindings[7],
+            "CrosshairPosL" => &self.key_bindings[8],
+            "CrosshairPosR" => &self.key_bindings[9],
+            "TurnLeft" => &self.key_bindings[10],
+            "TurnRight" => &self.key_bindings[11],
+            "FineAim" => &self.key_bindings[12],
+            "FireBullet" => &self.key_bindings[13],
+            "FireArrow" => &self.key_bindings[14],
+            "GodMode" => &self.key_bindings[15],
+            "Lock" => &self.key_bindings[16],
+            "Exit" => &self.key_bindings[17],
+            _ => return None
+        }.get_key();
+        Some(*key)
     }
 
     /// Renders the main menu and handles user interactions.
@@ -297,7 +347,7 @@ impl Menu {
             x: 230,
             y: 150,
             w: 340,
-            h: 40,
+            h: 50,
             text: "[1] RESUME GAME".to_string(),
             action: None
         };
@@ -305,7 +355,7 @@ impl Menu {
             x: 230,
             y: 210,
             w: 340,
-            h: 40,
+            h: 50,
             text: "[2] SAVE & EXIT".to_string(),
             action: None
         };
@@ -313,7 +363,7 @@ impl Menu {
             x: 230,
             y: 270,
             w: 340,
-            h: 40,
+            h: 50,
             text: audio_text.to_string(),
             action: None
         };
@@ -321,18 +371,8 @@ impl Menu {
             x: 230,
             y: 330,
             w: 340,
-            h: 40,
+            h: 50,
             text: "[ESC] MAIN MENU".to_string(),
-            action: None
-        };
-
-        //here goes nothin
-        let btn_keybindings = ButtonDef {
-            x: 230,
-            y: 330,
-            w: 340,
-            h: 40,
-            text: "[4] Key Bindings".to_string(),
             action: None
         };
 
@@ -353,9 +393,6 @@ impl Menu {
 
         if self.draw_flat_button(buffer, &btn_menu, mx, my) && clicked {
             return AppState::StartScreen;
-        }
-        if self.draw_flat_button(buffer, &btn_keybindings, mx, my) && clicked {
-            return AppState::KeyBindings;
         }
 
         AppState::GamePaused
@@ -383,36 +420,50 @@ impl Menu {
             );
             let mut key_btns : Vec<ButtonDef> = Vec::new();
 
-            key_btns.push( Self::key_binding_btn(0, 0, "FORWARDS", KeyFunctions::Forwards));
-            key_btns.push(Self::key_binding_btn(0, 1, "BACKWARDS", KeyFunctions::Backwards));
-            key_btns.push(Self::key_binding_btn(0, 2, "RIGHT", KeyFunctions::Right));
-            key_btns.push(Self::key_binding_btn(0, 3, "LEFT", KeyFunctions::Left));
-            key_btns.push(Self::key_binding_btn(0, 4, "JUMP", KeyFunctions::Jump));
-            key_btns.push( Self::key_binding_btn(0, 5, "CROUCH/SLIDE", KeyFunctions::CrouchSlide));
-            key_btns.push( Self::key_binding_btn(1, 0, "ROCKET JUMP", KeyFunctions::RocketJump));
-            key_btns.push( Self::key_binding_btn(1, 1, "INTERACT", KeyFunctions::Interact));
-            key_btns.push( Self::key_binding_btn(1, 2, "CROSSHAIR", KeyFunctions::CrosshairPos));
-            key_btns.push( Self::key_binding_btn(1, 3, "TURN L", KeyFunctions::TurnLeft));
-            key_btns.push( Self::key_binding_btn(1, 4, "TURN R", KeyFunctions::TurnRight));
-            key_btns.push( Self::key_binding_btn(1, 5, "FINE AIM", KeyFunctions::FineAim));
-            key_btns.push( Self::key_binding_btn(2, 0, "BULLET", KeyFunctions::FireBullet));
-            key_btns.push( Self::key_binding_btn(2, 1, "ARROW", KeyFunctions::FireArrow));
-            key_btns.push( Self::key_binding_btn(2, 2, "GODMODE", KeyFunctions::Godmode));
-            key_btns.push( Self::key_binding_btn(2, 3, "LOCK", KeyFunctions::Lock));
-            key_btns.push( Self::key_binding_btn(2, 4, "EXIT", KeyFunctions::Exit));
+            key_btns.push( Self::key_binding_btn(0, 0, "FORWARDS: ", self.key_bindings[0]));
+            key_btns.push(Self::key_binding_btn(0, 1, "BACKWARDS: ", self.key_bindings[1]));
+            key_btns.push(Self::key_binding_btn(0, 2, "RIGHT: ", self.key_bindings[2]));
+            key_btns.push(Self::key_binding_btn(0, 3, "LEFT: ", self.key_bindings[3]));
+            key_btns.push(Self::key_binding_btn(0, 4, "JUMP: ", self.key_bindings[4]));
+            key_btns.push( Self::key_binding_btn(0, 5, "CROUCH/SLIDE: ", self.key_bindings[5]));
+            key_btns.push( Self::key_binding_btn(1, 0, "ROCKET JUMP: ", self.key_bindings[6]));
+            key_btns.push( Self::key_binding_btn(1, 1, "INTERACT: ", self.key_bindings[7]));
+            key_btns.push( Self::key_binding_btn(1, 2, "CROSSHAIR UP: ", self.key_bindings[8]));
+            key_btns.push( Self::key_binding_btn(1, 3, "CROSSHAIR DOWN: ", self.key_bindings[9]));
+            key_btns.push( Self::key_binding_btn(1, 4, "TURN L: ", self.key_bindings[10]));
+            key_btns.push( Self::key_binding_btn(1, 5, "TURN R: ", self.key_bindings[11]));
+            key_btns.push( Self::key_binding_btn(2, 0, "FINE AIM: ", self.key_bindings[12]));
+            key_btns.push( Self::key_binding_btn(2, 1, "BULLET: ", self.key_bindings[13]));
+            key_btns.push( Self::key_binding_btn(2, 2, "ARROW: ", self.key_bindings[14]));
+            key_btns.push( Self::key_binding_btn(2, 3, "GODMODE: ", self.key_bindings[15]));
+            key_btns.push( Self::key_binding_btn(2, 4, "LOCK: ", self.key_bindings[16]));
+            key_btns.push( Self::key_binding_btn(2, 5, "EXIT: ", self.key_bindings[17]));
 
-            for mut btn in key_btns {
-                if self.selected_key == btn.action {
+
+            for (index, mut btn) in key_btns.into_iter().enumerate() {
+                if let Some(action_key) = &btn.action {
+                    btn.text.push_str(get_key_str(action_key.get_key()))
+                }
+                if self.selected_key == Some(index){
                     btn.text = "SELECT KEY: ".to_string();
-
+                    if let Some(key) = window.get_keys_pressed(KeyRepeat::No).first() {
+                        println!("{}", get_key_str(key));
+                        self.key_bindings[index].change_key(key);
+                        self.selected_key = None;
+                    }
                 }
                 if self.draw_flat_button(buffer, &btn, mx, my) && clicked {
-                    self.selected_key = btn.action;
+                    self.selected_key = Some(index);
+
                 }
+                if window.is_key_pressed(Key::Escape, KeyRepeat::No){
+                    return AppState::StartScreen
+                }
+
             }
         AppState::KeyBindings
     }
-    pub fn key_binding_btn(column: usize, row: usize, text: &str, action: KeyFunctions) -> ButtonDef{
+    pub fn key_binding_btn(column: usize, row: usize, text: &str, action: ActionKey) -> ButtonDef{
         let height= 45;
         let width =  220;
         let gap = 15;
@@ -441,6 +492,7 @@ impl Menu {
     /// Draws a rectangular button and its text onto the buffer.
     /// Returns `true` if the mouse cursor is currently hovering over it.
     fn draw_flat_button(&self, buffer: &mut [u32], btn: &ButtonDef, mx: usize, my: usize) -> bool {
+        let scale = if btn.action.is_some() { 1 } else { 2 };
         // Simple check for hover detection
         let hover = mx >= btn.x && mx <= (btn.x + btn.w) && my >= btn.y && my <= (btn.y + btn.h);
         let bg_color = if hover { COL_BTN_HOVER } else { COL_BTN_NORMAL };
@@ -456,9 +508,9 @@ impl Menu {
         }
 
         // Center the text horizontally and vertically inside the button bounds
-        let text_width = btn.text.len() * 8 * 2;
+        let text_width = btn.text.len() * 8 * scale;
         let text_x = btn.x + btn.w.saturating_sub(text_width) / 2;
-        let text_y = btn.y + btn.h.saturating_sub(16) / 2;
+        let text_y = btn.y + btn.h.saturating_sub(8 * scale) / 2;
 
         Self::draw_text(
             buffer,
@@ -467,7 +519,7 @@ impl Menu {
             &btn.text,
             text_x,
             text_y,
-            2,
+            scale,
             COL_TEXT_WHITE,
         );
 

@@ -4,20 +4,17 @@
 //! the Pause Screen, and the Game Over screen. It handles drawing buttons and text,
 //! processing mouse clicks, and taking care of saving and loading the player's progress.
 
-use std::cmp::PartialEq;
-use std::fmt::Debug;
-use font8x8::{BASIC_FONTS, UnicodeFonts};
-use minifb::{Key, KeyRepeat, MouseButton, MouseMode, Window};
-use key_bindings::ActionKey;
-use std::fs;
-use minifb::Key::{Space, D, W, C, R, F, Up, Down, Left, Right, E, RightCtrl, RightShift, G, L, Escape, S, A};
-use log::error;
 use crate::audio::audio_handler::Audio;
 use crate::game::gamestate::Game;
-use crate::game::player::LastInputDirection::No;
 use crate::menu::key_bindings;
-use crate::menu::key_bindings::{get_key_str, Keys};
+use crate::menu::key_bindings::get_key_str;
 use crate::render::RendererData;
+use font8x8::{BASIC_FONTS, UnicodeFonts};
+use key_bindings::ActionKey;
+use minifb::{Key, KeyRepeat, MouseButton, MouseMode, Window};
+use std::cmp::PartialEq;
+use std::fmt::Debug;
+use std::fs;
 
 const SCREEN_WIDTH: usize = 800;
 const SCREEN_HEIGHT: usize = 450;
@@ -390,7 +387,7 @@ impl Menu {
         }
 
         if self.draw_flat_button(buffer, &btn_save, mx, my) && clicked || click2 {
-            let _ = std::fs::write("savegame.txt", game.map_index.to_string());
+            let _ = fs::write("savegame.txt", game.map_index.to_string());
             return AppState::StartScreen;
         }
 
@@ -410,8 +407,6 @@ impl Menu {
         &mut self,
         window: &mut Window,
         buffer: &mut [u32],
-        game: &mut Game,
-        audio: &mut Audio,
     )-> AppState{
             buffer.fill(COL_BG_MAIN);
 

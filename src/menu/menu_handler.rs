@@ -468,6 +468,7 @@ impl Menu {
                     if let Some(key) = window.get_keys_pressed(KeyRepeat::No).first() {
                         println!("{}", get_key_str(key));
                         self.key_bindings[index].change_key(key);
+                        self.save_key_bindings().expect("That didnt work");
                         self.selected_key = None;
                     }
                 }
@@ -476,7 +477,6 @@ impl Menu {
 
                 }
                 if window.is_key_pressed(Key::Escape, KeyRepeat::No){
-                    self.save_key_bindings().expect("Failed to save Key Bindings");
                     return AppState::StartScreen
                 }
 

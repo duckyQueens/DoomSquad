@@ -171,6 +171,7 @@ impl Menu {
         let click1 = window.is_key_pressed(Key::Key1, KeyRepeat::No);
         let click2 = window.is_key_pressed(Key::Key2, KeyRepeat::No);
         let click3 = window.is_key_pressed(Key::Key3, KeyRepeat::No);
+        let click4 = window.is_key_pressed(Key::Key4, KeyRepeat::No);
 
         // Render titles
         Self::draw_text_centered(
@@ -267,7 +268,7 @@ impl Menu {
             return AppState::StartScreen;
         }
 
-        if self.draw_flat_button(buffer, &btn_key, mx, my) && clicked {
+        if self.draw_flat_button(buffer, &btn_key, mx, my) && clicked || click4{
             return AppState::KeyBindings;
         }
 

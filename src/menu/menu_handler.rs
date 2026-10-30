@@ -7,7 +7,7 @@
 use crate::audio::audio_handler::Audio;
 use crate::game::gamestate::Game;
 use crate::menu::key_bindings;
-use crate::menu::key_bindings::get_key_str;
+use crate::menu::key_bindings::{get_key_str, str_to_key};
 use crate::render::RendererData;
 use font8x8::{BASIC_FONTS, UnicodeFonts};
 use key_bindings::ActionKey;
@@ -81,7 +81,7 @@ pub struct Menu {
 
 impl Menu {
     pub fn new() -> Self {
-        Self {
+        let mut menu = Self {
             was_mouse_down: false,
             selected_key: None,
             key_bindings: Vec::from([
@@ -104,7 +104,9 @@ impl Menu {
                 ActionKey::Lock{key:Key::L},
                 ActionKey::Exit{key:Key::Escape},
             ]),
-        }
+        };
+        menu.load_key_bindings();
+        menu
     }
     pub fn get_key_binding(&self, ident: &str) -> Option<Key> {
         let key = match ident {
@@ -130,13 +132,26 @@ impl Menu {
         }.get_key();
         Some(*key)
     }
-    pub fn save_key_bindings(&self) -> std::io::Result<()>{
-        let saved_keys = self.key_bindings
+    pub fn save_key_bindings(&self) -> Result<(), Box<dyn std::error::Error>>{
+        let saved_keys: Vec<String> = self.key_bindings
             .iter()
             .map(|action_key| get_key_str(action_key.get_key()).to_string())
-            .collect::<Vec<String>>()
-            .join("\n");
-        fs::write("assets/key_bindings.txt", saved_keys)
+            .collect();
+
+        let ron_format = ron::ser::to_string_pretty(
+            &saved_keys,
+            ron::ser::PrettyConfig::default(),
+        )?;
+
+        fs::write("assets/key_bindings.ron", ron_format);
+        Ok(())
+    }
+    pub fn load_key_bindings(&mut self) {
+        let keys = fs::read_to_string("assets/key_bindings.ron");
+        let saved: Vec<String> = ron::from_str(&keys.unwrap()).expect("REASON");
+        for (action, key) in self.key_bindings.iter_mut().zip(saved) {
+            action.change_key(&str_to_key(&key.as_str()).unwrap());
+        }
     }
 
     /// Renders the main menu and handles user interactions.
@@ -467,7 +482,7 @@ impl Menu {
             }
         AppState::KeyBindings
     }
-    pub fn key_binding_btn(column: usize, row: usize, text: &str, action: ActionKey) -> ButtonDef{
+    fn key_binding_btn(column: usize, row: usize, text: &str, action: ActionKey) -> ButtonDef{
         let height= 45;
         let width =  220;
         let gap = 15;

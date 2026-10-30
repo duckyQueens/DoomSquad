@@ -132,8 +132,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 app_state = menu.update_and_draw_key_bindings(&mut window,
                                                               &mut buffer,
-                                                              &mut game,
-                                                              &mut audio
 
                 );
             }

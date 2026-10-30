@@ -1,0 +1,18 @@
+W
+D
+S
+A
+Space
+C
+R
+F
+Up
+Down
+Left
+Right
+E
+Right Ctrl
+Right Shift
+G
+L
+Escape

@@ -133,6 +133,14 @@ impl Menu {
         }.get_key();
         Some(*key)
     }
+    pub fn save_key_bindings(&self) -> std::io::Result<()>{
+        let saved_keys = self.key_bindings
+            .iter()
+            .map(|action_key| get_key_str(action_key.get_key()).to_string())
+            .collect::<Vec<String>>()
+            .join("\n");
+        fs::write("assets/key_bindings.txt", saved_keys)
+    }
 
     /// Renders the main menu and handles user interactions.
     pub fn update_and_draw_start_menu(
@@ -457,6 +465,7 @@ impl Menu {
 
                 }
                 if window.is_key_pressed(Key::Escape, KeyRepeat::No){
+                    self.save_key_bindings().expect("Failed to save Key Bindings");
                     return AppState::StartScreen
                 }
 

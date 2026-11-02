@@ -305,19 +305,19 @@ impl Player {
                 .step(self.move_speed, -PI / 2.0, map, self.godmode);
         }
         if (window.is_key_down(menu.get_key_binding("Backwards").unwrap())
+            && ((!self.is_sliding && !self.is_jumping) || self.last_input == S))
+            || (self.is_jumping && (self.last_input == S))
+        {
+            step_successful = self.mover.step(self.move_speed, PI, map, self.godmode);
+        }
+
+        if (window.is_key_down(menu.get_key_binding("Right").unwrap())
             && ((!self.is_sliding && !self.is_jumping) || self.last_input == D))
             || (self.is_jumping && (self.last_input == D))
         {
             step_successful = self
                 .mover
                 .step(self.move_speed, PI / 2.0, map, self.godmode);
-        }
-
-        if (window.is_key_down(menu.get_key_binding("Right").unwrap())
-            && ((!self.is_sliding && !self.is_jumping) || self.last_input == S))
-            || (self.is_jumping && (self.last_input == S))
-        {
-            step_successful = self.mover.step(self.move_speed, PI, map, self.godmode);
         }
 
         // if we moved, play step
@@ -334,17 +334,17 @@ impl Player {
             self.mover.foot_level += FLY_UP_DOWN_SPEED;
         }
 
-        if window.is_key_down(Key::LeftShift) && self.godmode {
+        if window.is_key_down(menu.get_key_binding("Sprint").unwrap()) && self.godmode {
             self.mover.foot_level -= FLY_UP_DOWN_SPEED;
         }
 
         //slowdown movespeed if not sprinting and sliding anymore
-        if !window.is_key_down(Key::LeftShift) && !self.is_jumping && !self.is_sliding {
+        if !window.is_key_down(menu.get_key_binding("Sprint").unwrap()) && !self.is_jumping && !self.is_sliding {
             self.move_speed = MOVE_SPEED;
         }
 
         //implementing Sprint that gradually increases movement speed
-        if window.is_key_down(Key::LeftShift) && !self.godmode {
+        if window.is_key_down(menu.get_key_binding("Sprint").unwrap()) && !self.godmode {
             if self.move_speed < SPRINT_SPEED - 0.1 {
                 self.move_speed += 0.1;
             }
@@ -551,11 +551,11 @@ impl Player {
 
     fn save_input(&mut self, window: &Window, menu: &Menu) {
         if window.is_key_down(menu.get_key_binding("Backwards").unwrap()) {
-            self.last_input = D;
+            self.last_input = S;
         } else if window.is_key_down(menu.get_key_binding("Left").unwrap()) {
             self.last_input = A;
         } else if window.is_key_down(menu.get_key_binding("Right").unwrap()) {
-            self.last_input = S;
+            self.last_input = D;
         } else if window.is_key_down(menu.get_key_binding("Forwards").unwrap()) {
             self.last_input = W;
         } else {

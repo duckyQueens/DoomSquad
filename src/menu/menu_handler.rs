@@ -86,8 +86,8 @@ impl Menu {
             selected_key: None,
             key_bindings: Vec::from([
                 ActionKey::Forwards {key:Key::W},
-                ActionKey::Backwards{key:Key::D},
-                ActionKey::Right{key:Key::S},
+                ActionKey::Backwards{key:Key::S},
+                ActionKey::Right{key:Key::D},
                 ActionKey::Left{key:Key::A},
                 ActionKey::Jump{key:Key::Space},
                 ActionKey::CrouchSlide{key:Key::C},
@@ -103,6 +103,7 @@ impl Menu {
                 ActionKey::GodMode{key:Key::G},
                 ActionKey::Lock{key:Key::L},
                 ActionKey::Exit{key:Key::Escape},
+                ActionKey::Sprint{key:Key::LeftShift},
             ]),
         };
         menu.load_key_bindings();
@@ -128,6 +129,7 @@ impl Menu {
             "GodMode" => &self.key_bindings[15],
             "Lock" => &self.key_bindings[16],
             "Exit" => &self.key_bindings[17],
+            "Sprint" => &self.key_bindings[18],
             _ => return None
         }.get_key();
         Some(*key)
@@ -437,6 +439,11 @@ impl Menu {
                 3,
                 COL_TEXT_WHITE
             );
+            if self.selected_key.is_none()
+                && window.is_key_pressed(self.get_key_binding("Exit").unwrap(), KeyRepeat::No)
+            {
+                return AppState::StartScreen;
+            }
             let mut key_btns : Vec<ButtonDef> = Vec::new();
 
             key_btns.push( Self::key_binding_btn(0, 0, "FORWARDS: ", self.key_bindings[0]));
@@ -456,7 +463,8 @@ impl Menu {
             key_btns.push( Self::key_binding_btn(2, 2, "ARROW: ", self.key_bindings[14]));
             key_btns.push( Self::key_binding_btn(2, 3, "GODMODE: ", self.key_bindings[15]));
             key_btns.push( Self::key_binding_btn(2, 4, "LOCK: ", self.key_bindings[16]));
-            key_btns.push( Self::key_binding_btn(2, 5, "EXIT: ", self.key_bindings[17]));
+            key_btns.push( Self::key_binding_btn(2, 6, "EXIT: ", self.key_bindings[17]));
+            key_btns.push( Self::key_binding_btn(2, 5, "SPRINT: ", self.key_bindings[18]));
 
 
             for (index, mut btn) in key_btns.into_iter().enumerate() {
@@ -476,17 +484,14 @@ impl Menu {
                     self.selected_key = Some(index);
 
                 }
-                if window.is_key_pressed(Key::Escape, KeyRepeat::No){
-                    return AppState::StartScreen
-                }
-
             }
+
         AppState::KeyBindings
     }
     fn key_binding_btn(column: usize, row: usize, text: &str, action: ActionKey) -> ButtonDef{
-        let height= 45;
+        let height= 40;
         let width =  220;
-        let gap = 15;
+        let gap = 10;
         ButtonDef{
             x: 50 + column * (width + gap),
             y : 80 + row * (height + gap),

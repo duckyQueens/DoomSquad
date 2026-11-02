@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app_state = AppState::StartScreen;
 
     while window.is_open() {
-        let escape_clicked = window.is_key_pressed(Key::Escape, KeyRepeat::No);
+        let escape_clicked = window.is_key_pressed(menu.get_key_binding("Exit").unwrap(), KeyRepeat::No);
 
         match app_state {
             AppState::StartScreen => {

@@ -465,6 +465,17 @@ impl Menu {
             key_btns.push( Self::key_binding_btn(2, 4, "LOCK: ", self.key_bindings[16]));
             key_btns.push( Self::key_binding_btn(2, 6, "EXIT: ", self.key_bindings[17]));
             key_btns.push( Self::key_binding_btn(2, 5, "SPRINT: ", self.key_bindings[18]));
+            let back_btn = ButtonDef {
+                x: 50,
+                y: 380,
+                w: 450,
+                h: 40,
+                text: " < GO BACK".to_string(),
+                action: None
+        };
+        if self.draw_flat_button(buffer, &back_btn, mx,my) && clicked{
+            return AppState::StartScreen
+        }
 
 
             for (index, mut btn) in key_btns.into_iter().enumerate() {
